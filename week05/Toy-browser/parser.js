@@ -40,6 +40,38 @@ function match (element, selector) {
     }
 }
 
+function specificity(selector) {
+    // 优先级
+    // [inline, id,, class, tagName]
+    let p = [0,0,0,0];
+    let selectorParts = selector.split(" ");
+    for(let part of selectorParts) {
+        if(part.charAt(0) == '#') {
+            p[1] += 1;
+        }else if(part.charAt(0) == '.') {
+            p[2] += 1;
+        }else {
+            p[3] += 1;
+        }
+    }
+    return p;
+
+}
+
+function compare(sp1, sp2) {
+    // 优先级， 高位优先级高， 所以直接比较高位即可
+    // [inline, id,, class, tagName]
+    if(sp1[0] - sp2[0]) {
+        return sp1[0] - sp2[0]
+    }else if(sp1[1] - sp2[1]) {
+        return sp1[1] - sp2[1]
+    }else if(sp1[2] - sp2[2]) {
+        return sp1[2] - sp2[2]
+    }else {
+        return sp1[3] - sp2[3]
+    }
+}
+
 function computeCSS(element) {
     console.log('======rules', rules);
     console.log("compute css for element", element);
@@ -72,6 +104,22 @@ function computeCSS(element) {
         if(matched) {
             // 如果匹配到， 我们要加入
             console.log("+++Element", element, "matched rule", rule);
+            let computedStyle = element.computedStyle;
+            let sp = specificity(rule.selectors[0]);
+            for (let declaration of rule.declarations) {
+                if(!computedStyle[declaration.property]) {
+                    computedStyle[declaration.property] = {};
+                }
+                if(!computedStyle[declaration.property].specificity) {
+                    computedStyle[declaration.property].value = declaration.value;
+                    computedStyle[declaration.property].specificity = sp;
+                }else if(compare(computedStyle[declaration.property].specificity, sp) < 0) {
+                    computedStyle[declaration.property].value = declaration.value;
+                    computedStyle[declaration.property].specificity = sp;
+                }
+                // computedStyle[declaration.property].value = declaration.value;
+            }
+            console.log('====element.computedStyle', element.computedStyle);
         }
     }
     
