@@ -1,4 +1,5 @@
 const EOF = Symbol('EOF');
+const { match } = require('assert');
 const css = require('css');
 
 let currentToken = null;
@@ -14,6 +15,67 @@ function addCSSRules(text) {
     console.log(JSON.stringify(ast, null, "    "));
     rules.push(...ast.stylesheet.rules);
 }
+// 选择器如 div .a #a 
+function match (element, selector) {
+    if(!selector || !element.attributes){
+        return false;
+    }
+    if(selector.charAt(0) == "#") {
+        var attr = element.attributes.filter(attr => attr.name === 'id')[0];
+        if(attr && attr.value === selector.replace("#", '')) {
+            return true;
+        }else if(selector.charAt(0) == '.') {
+            var attr = element.attributes.filter(attr => attr.name === 'class')[0];
+            if(attr && attr.value === selector.replace(".", "")) {
+                return true;
+            }
+        }else {
+            if(element.tagName === selector) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+}
+
+function computeCSS(element) {
+    console.log('======rules', rules);
+    console.log("compute css for element", element);
+    // stack.slice() 不传参数会把整个数组赋值一遍
+    // reverse 是要从当前元素向外匹配，比如一个 div div #myid, 前边的div 不知道应用于哪个， 但是最后的myid 一定是应用于当前的元素
+    var elements = stack.slice().reverse();
+    if(!element.computedStyle) {
+        element.computedStyle = {};
+    }
+
+    for(let rule of rules) {
+        var selectorParts = rules.selectors[0].split(" ").reverse();
+
+        if(!match(element, selectorParts[0])) {
+            continue;
+        }
+
+        let matched = false;
+
+        var j = 1;  // j 表示选择器的位置， i 表示元素的位置
+        for(var i = 0; i< elements.length; i++) {
+            if(match(elements[i], selectorParts[j])) {
+                j++;
+            }
+        }
+        if(j >= selectorParts.length){
+            matched = true;
+        }
+
+        if(matched) {
+            // 如果匹配到， 我们要加入
+            console.log("+++Element", element, "matched rule", rule);
+        }
+    }
+    
+}
 
 const emit = (token) => {
     let top = stack[stack.length - 1];
@@ -27,7 +89,7 @@ const emit = (token) => {
         };
 
         element.tagName = token.tagName;
-        top.children.push(element);
+        // top.children.push(element);
         // element.parent = top;
 
         for (let a in token) {
@@ -39,6 +101,10 @@ const emit = (token) => {
                 });
             }
         }
+
+        computeCSS(element);
+
+        top.children.push(element);
 
         if (!token.isSelfClosing) {
             stack.push(element);
