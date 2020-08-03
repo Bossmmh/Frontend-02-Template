@@ -1,5 +1,5 @@
 const EOF = Symbol('EOF');
-const { match } = require('assert');
+// const { match } = require('assert');
 const css = require('css');
 
 let currentToken = null;
@@ -51,7 +51,7 @@ function computeCSS(element) {
     }
 
     for(let rule of rules) {
-        var selectorParts = rules.selectors[0].split(" ").reverse();
+        var selectorParts = rule.selectors[0].split(" ").reverse();
 
         if(!match(element, selectorParts[0])) {
             continue;
