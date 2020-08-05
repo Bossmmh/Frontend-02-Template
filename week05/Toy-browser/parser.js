@@ -1,6 +1,7 @@
 const EOF = Symbol('EOF');
 // const { match } = require('assert');
 const css = require('css');
+const layout = require('./layout.js');
 
 let currentToken = null;
 let currentAttribute = null;
@@ -168,6 +169,7 @@ const emit = (token) => {
                 // 实际情况比较复杂， 这里只简易实现一下
                 addCSSRules(top.children[0].content);
             }
+            layout(top);
             stack.pop();
         }
         currentTextNode = null;
