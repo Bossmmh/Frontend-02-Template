@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>匹配选择器-不太对</title>
+</head>
+<body>
+    <div>
+        <div id="id">
+            <div>
+                <p id="test" class='class1'>
+                    <span class='test2'>test</span>
+                </p>
+                <div class="class aaa">hello world</div>
+            </div>
+        </div>
+        <div class="class aaa">hello world222</div>
+    </div>
+    <script>
+   
+    // 编写一个 match 函数。它接受两个参数，第一个参数是一个选择器字符串性质，第二个是一个 HTML 元素。这个元素你可以认为它一定会在一棵 DOM 树里面。通过选择器和 DOM 元素来判断，当前的元素是否能够匹配到我们的选择器。（不能使用任何内置的浏览器的函数，仅通过 DOM 的 parent 和 children 这些 API，来判断一个元素是否能够跟一个选择器相匹配。）以下是一个调用的例子。
+    const match = (selector, element) => {
+        console.log('-------element', element);
+        if(element === null || !selector) {
+            return false;
+        }else {
+            let flag = false;
+            const nodeName1 = element.nodeName.toString().toLowerCase();
+            let children = element.children;
+            const selectors = selector.split(' ');
+            console.log('=====selectors - [div, #id.class, p]', selectors, children);
+            selectors.forEach((s, index) => {
+                if(!s.includes('.') || !s.includes('#')) {
+                    // 只是标签， 没有'#'， '.'的情况, 或者还可能有属性选择器
+                    if(index == 0) {
+                        // index 是0 ， 表示的是父级的标签选择器
+                        if(s !== nodeName1) return;
+                    }else {
+                        // 查看再children 里是否查找到该元素
+                        let ifExist = false;
+                        console.log('=====children2', children);
+                        for (let c of children) {
+                            if(s !== c.toString().toLowerCase()) {
+                                flag = false;
+                                return;
+                            }else {
+                                flag = true;
+                                // console.log('====children', children);
+                                children = element.getElementsByTagName(c);
+                                // console.log('=====children2', children);
+                            }
+                        }
+                    }
+
+                }else {
+                    const selectors = s.split('.');
+                    console.log('selectors', selectors);
+                    // 可能是[#id, class]或者 [#id] 或者[class]等
+                    if(selectors.length === 1) {
+                        if(selectors[0].includes('#')) {
+                            // 判断是否含有当前标签的dom 
+                            const dom = document.getElementById(selectors[0]);
+                            if(!dom) {
+                                flag = false;
+                            }else {
+                                flag = true;
+                                children = dom.children;
+                                console.log('====children', children);
+                            }
+                        }else {
+                            // 单独一个class 的情况
+                            const dom = element.getElementsByClassName(selectors[0]);
+                            if(dom.length) {
+                                flag = true;
+                                children = dom[0].children;
+                            }else {
+                                flag = false;
+                            }
+                        }
+                    }else {
+                        // 多个选择器同级的情况， 判断选择器是否都存在
+                        selectors.forEach(s => {
+                            if(s.includes('#')) {
+                                console.log('====ssss', s, typeof s, s.split('#')[1]);
+                                const dom = document.getElementById(s.split('#')[1]);
+                                if(!dom) {
+                                    flag = false;
+                                }else {
+                                    falg = true;
+                                    children = dom.children;
+                                    console.log('===children#', children);
+                                }
+                            }else {
+                                const dom = element.getElementsByClassName(s);
+                                console.log('=====dom-class', dom);
+                                if(!dom) {
+                                    flag = false;
+                                }else {
+                                    falg = true;
+                                    doms = document.getElementsByClassName(s);
+                                    // 找出符合当前要求的class 所在dom
+                                    for (let d of doms) {
+                                        if(d.parentNode == dom[0].parentNode) {
+                                            children = d.children;
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+            })
+            return flag;
+        }
+    }
+
+    const result =  match("div #test.class1 .test2", document.getElementById("id"));
+    console.log('----------result', result);
+    </script>
+</body>
+</html>

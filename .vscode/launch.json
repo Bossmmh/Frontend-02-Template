@@ -7,6 +7,12 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "selector",
+            "program": "${workspaceFolder}/week06/selector.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "launch parser.js",
             "program": "${workspaceFolder}/week05/Toy-browser/parser.js"
         },
